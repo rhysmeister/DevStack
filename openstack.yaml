@@ -1,0 +1,55 @@
+---
+  - hosts: all
+    gather_facts: yes
+    become: yes
+    vars:
+      stack_admin_user_pwd: "secret"
+      stack_database_pwd: "secret"
+      stack_rabbit_pwd: "secret"
+      stack_service_pwd: "secret"
+
+    tasks:
+
+      - name: "Add a user for OpenStack"
+        user:
+          name: "stack"
+          shell: "/bin/bash"
+          home: "/opt/stack"
+          comment: "User for OpenStack"
+
+      - name: Add a sudo rule
+        lineinfile:
+          dest: "/etc/sudoers.d/stack"
+          create: "yes"
+          regexp: '^stack ALL=(ALL) NOPASSWD: ALL'
+          line: 'stack ALL=(ALL) NOPASSWD: ALL'
+
+      - name: "Install git"
+        yum:
+          name: [ "git" ]
+          state: "latest"
+
+      - name: "Clone OpenStack repo"
+        become: "yes"
+        become_user: "stack"
+        git:
+          repo: "https://git.openstack.org/openstack-dev/devstack"
+          dest: "/opt/stack/stack"
+
+      - name: "Create local.conf file for OpenStack"
+        copy:
+          content: |
+                    [[local|localrc]]
+                    ADMIN_PASSWORD={{ stack_admin_user_pwd }}
+                    DATABASE_PASSWORD={{ stack_database_pwd }}
+                    RABBIT_PASSWORD={{ stack_rabbit_pwd }}
+                    SERVICE_PASSWORD=stack_service_pwd
+                    HOST_IP={{ ansible_eth0.ipv4.address }}
+          dest: "/opt/stack/stack/local.conf"
+
+      - name: "Start the install of OpenStack"
+        become: "yes"
+        become_user: "stack"
+        command: "./stack.sh"
+        args:
+          chdir: "/opt/stack/stack"
