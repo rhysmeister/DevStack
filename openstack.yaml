@@ -18,15 +18,18 @@
           comment: "User for OpenStack"
 
       - name: Add a sudo rule
-        lineinfile:
+        copy:
+          content: 'stack ALL=(ALL) NOPASSWD: ALL'
           dest: "/etc/sudoers.d/stack"
-          create: "yes"
-          regexp: '^stack ALL=(ALL) NOPASSWD: ALL'
-          line: 'stack ALL=(ALL) NOPASSWD: ALL'
 
       - name: "Install git"
         yum:
           name: [ "git" ]
+          state: "latest"
+
+      - name: "Install additional packages"
+        yum:
+          name: [ "python-pbr", "python2-pbr" ]
           state: "latest"
 
       - name: "Clone OpenStack repo"
@@ -43,8 +46,9 @@
                     ADMIN_PASSWORD={{ stack_admin_user_pwd }}
                     DATABASE_PASSWORD={{ stack_database_pwd }}
                     RABBIT_PASSWORD={{ stack_rabbit_pwd }}
-                    SERVICE_PASSWORD=stack_service_pwd
-                    HOST_IP={{ ansible_eth0.ipv4.address }}
+                    SERVICE_PASSWORD={{ stack_service_pwd }}
+                    HOST_IP={{ ansible_eth1.ipv4.address }}
+                    SERVICE_HOST=127.0.0.1
           dest: "/opt/stack/stack/local.conf"
 
       - name: "Start the install of OpenStack"
