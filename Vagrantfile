@@ -16,7 +16,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision :ansible do |ansible|
     ansible.playbook = "openstack.yaml"
-    ansible.inventory_path = ".vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
   end
 
 end
