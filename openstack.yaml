@@ -75,3 +75,9 @@
           chdir: "/opt/stack/stack"
         environment:
           no_proxy: "192.168.4.111"
+
+      - name: Ensure httpd running and enabled
+        service:
+          name: httpd
+          enabled: yes
+          state: started
